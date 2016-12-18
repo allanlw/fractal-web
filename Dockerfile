@@ -86,11 +86,19 @@ ADD fractal-js/pre-js.js fractal-js/pre-js.js
 
 RUN cd fractal-js && \
     ln -s ../fractal/src/fractal fractal.bc && \
-    emcc -o fractal.js fractal.bc -L/fractal/prefix/lib/ /fractal/prefix/lib/libz.so -lpng -ljpeg -lgd --pre-js pre-js.js -s FORCE_FILESYSTEM=1 -v -s EXPORTED_FUNCTIONS="['_main']" -O2 -s ALLOW_MEMORY_GROWTH=1 --closure 1
+    emcc -o fractal.js fractal.bc -L/fractal/prefix/lib/ \
+	/fractal/prefix/lib/libz.so -lpng -ljpeg -lgd \
+	--pre-js pre-js.js -v -O3 --closure 1 \
+	-s FORCE_FILESYSTEM=1 \
+	-s EXPORTED_RUNTIME_METHODS="[]" \
+	-s ALLOW_MEMORY_GROWTH=1 \
+	-s DOUBLE_MODE=0 \
+        -s DISABLE_EXCEPTION_CATCHING=1 \
+	-s AGGRESSIVE_VARIABLE_ELIMINATION=1
 
 ADD fractal-js fractal-js
 WORKDIR fractal-js
 
 EXPOSE 8080
 
-ENTRYPOINT python -m SimpleHTTPServer 8080
+CMD python -m SimpleHTTPServer 8080
