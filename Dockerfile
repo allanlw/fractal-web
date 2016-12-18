@@ -21,7 +21,7 @@ RUN wget http://zlib.net/zlib-1.2.8.tar.gz
 RUN tar zxvf zlib-1.2.8.tar.gz
 
 RUN cd zlib* && \
-  emconfigure bash -c "CFLAGS=-O2 ./configure --prefix /fractal/prefix" && \
+  emconfigure bash -c "CFLAGS=-O3 ./configure --prefix /fractal/prefix" && \
   emmake make -j $(nproc) && \
   emmake make install && \
   cd ..
@@ -32,17 +32,10 @@ RUN wget https://download.sourceforge.net/libpng/libpng-1.6.21.tar.gz
 RUN tar zxvf libpng-1.6.21.tar.gz
 
 RUN cd libpng* && \
-  emconfigure bash -c "CPPFLAGS='-I/fractal/prefix/include/' LDFLAGS='-L/fractal/prefix/lib' CFLAGS=-O2 ./configure --prefix=/fractal/prefix --enable-shared=yes" && \
+  emconfigure bash -c "CPPFLAGS='-I/fractal/prefix/include/' LDFLAGS='-L/fractal/prefix/lib' CFLAGS=-O3 ./configure --prefix=/fractal/prefix --enable-shared=yes" && \
   emmake bash -c "CFLAGS='-L/fractal/prefix/lib/ -I/fractal/prefix/include' make -j $(nproc)" && \
   emmake make install && \
   cd ..
-
-# For some reason this doesn't work...?
-#RUN cd libpng* && \
-#  emconfigure ./configure --prefix=/fractal/prefix --with-pkgconfigdir=/fractal/prefix && \
-#  emmake make -j $(nproc) && \
-#  emmake make install && \
-#  cd ..
 
 # LIBJPEG
 
@@ -51,7 +44,7 @@ RUN tar zxvf jpegsrc.v6b.tar.gz
 
 RUN cd jpeg-6b && \
   cp /usr/share/automake-1.14/config.* . && \
-  emconfigure bash -c "CFLAGS=-O2 ./configure --prefix=/fractal/prefix --enable-shared" && \
+  emconfigure bash -c "CFLAGS=-O3 ./configure --prefix=/fractal/prefix --enable-shared" && \
   emmake make -j $(nproc) && \
   mkdir -p /fractal/prefix/man/man1 && \
   emmake make install && \
@@ -63,7 +56,7 @@ RUN wget https://github.com/libgd/libgd/releases/download/gd-2.2.3/libgd-2.2.3.t
 RUN tar xzvf libgd-2.2.3.tar.gz
 
 RUN cd libgd* && \
-  emconfigure bash -c "CFLAGS=-Wno-error PKG_CONFIG_LIBDIR=/fractal/prefix/lib/pkgconfig:$PKG_CONFIG_LIBDIR ./configure --prefix /fractal/prefix --with-zlib --with-png --with-jpeg=/fractal/source/jpeg-6b/ --enable-shared=yes" && \
+  emconfigure bash -c "CFLAGS='-Wno-error -O3' PKG_CONFIG_LIBDIR=/fractal/prefix/lib/pkgconfig:$PKG_CONFIG_LIBDIR ./configure --prefix /fractal/prefix --with-zlib --with-png --with-jpeg=/fractal/source/jpeg-6b/ --enable-shared=yes" && \
   emmake make -j $(nproc) && \
   emmake make install && \
   cd ..
@@ -76,7 +69,7 @@ RUN apt-get install -y build-essential
 
 RUN cd fractal && \
     autoreconf -i && \
-    emconfigure bash -c "CPPFLAGS='-I/fractal/prefix/include' LDFLAGS='-L/fractal/prefix/lib' ./configure --prefix=/fractal/prefix" && \
+    emconfigure bash -c "CPPFLAGS='-I/fractal/prefix/include' LDFLAGS='-L/fractal/prefix/lib' CFLAGS=-O3 ./configure --prefix=/fractal/prefix" && \
     emmake make -j $(nproc) && \
     cd ..
 
