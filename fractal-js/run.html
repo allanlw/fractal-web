@@ -1,17 +1,32 @@
 <!DOCTYPE html>
 
 <script>
+var loadingbar, loadingLabel;
+
+function setLoading(t) {
+  loadingLabel.textContent = t;
+  loadingbar.textContent = t;
+  loadingbar.removeAttribute("value");
+}
+
 function encodeThenDecode(input, inargs, outargs, cb) {
   var w1 = new Worker("fractal.js");
 
+  setLoading("Encoding...");
   console.log("Firing Encode worker");
   w1.postMessage({input: input, arguments: ['--encode', '-vo', '/output.bin'].concat(inargs).concat(["/input.bin"])});
   w1.onmessage = function(response) {
+    if (typeof response.data === "number") {
+      loadingbar.value = response.data;
+      return;
+    }
     var w2 = new Worker("fractal.js");
+    setLoading("Info...");
     console.log("Firing Info Worker");
     w2.postMessage({input: response.data, arguments: ["--info", "-v", "/input.bin"]});
     w2.onmessage = function() {
       var w3 = new Worker("fractal.js");
+      setLoading("Decoding...");
       console.log("Firing Decode worker");
       w3.postMessage({input: response.data, arguments: ["--decode", "-vo", "/output.bin"].concat(outargs).concat(["/input.bin"])});
       w3.onmessage = function(response) {
@@ -26,27 +41,45 @@ function encodeThenDecode(input, inargs, outargs, cb) {
 var LENNA = null;
 
 function showControls() {
+  loadingbar = document.getElementById("loading");
+  loadingLabel = document.getElementById("loadingLabel");
+  var loadingContainer = document.getElementById("loadingContainer");
   var controls = document.getElementById("controls");
-  var loading = document.getElementById("loading");
   var submit = document.getElementById("submit");
+  var upload = document.getElementById("upload");
 
   submit.onclick = function(ev) {
 
     ev.preventDefault();
 
     controls.style.display = "none";
-    loading.style.display = "block";
+    loadingContainer.style.display = "block";
 
-    encodeThenDecode(LENNA,
-        document.getElementById("inargs").value.split(" "),
-        document.getElementById("outargs").value.split(" "),
-        function(result) {
-           var b = new Blob([result]);
-           document.getElementById("output").src = URL.createObjectURL(b);
+    var getinput = function(cb) { cb(LENNA) };
 
-           controls.style.display = "block";
-           loading.style.display = "none";
-        });
+    if (upload.files[0]) {
+      getinput = function(cb) {
+        setLoading("Uploading...");
+        var reader = new FileReader();
+        reader.onload = function(res) { cb(res.target.result); };
+        reader.onprogress = function(p) { loadingbar.value = (progress.loaded / progress.total) * 100; };
+        reader.readAsArrayBuffer(upload.files[0]);
+      }
+    }
+
+
+    getinput(function(bytes) {
+      encodeThenDecode(bytes,
+          document.getElementById("inargs").value.split(" "),
+          document.getElementById("outargs").value.split(" "),
+          function(result) {
+             var b = new Blob([result]);
+             document.getElementById("output").src = URL.createObjectURL(b);
+
+             controls.style.display = "block";
+             loadingContainer.style.display = "none";
+          });
+    });
 
     return false;
   }
@@ -68,14 +101,17 @@ oReq.open("GET", "Lenna.png");
 oReq.send();
 </script>
 
-<div id="loading">
-Loading...
+<div id="loadingContainer">
+<span id="loadingLabel">Loading</span>
+<progress max="100" id="loading">Loading...</progress>
 </div>
 
 <div id="controls" style="display:none">
 
 In Args: <input id="inargs" value="--split=high --cutoff=40"/><br/>
 Out Args: <input id="outargs" value=""/><br/>
+
+File (default is lenna): <input type="file" id="upload"/>
 
 <input type="submit" id="submit"/>
 </div>

@@ -82,11 +82,14 @@ RUN cd fractal && \
 
 # Build output javascript
 
-ADD fractal-js fractal-js
+ADD fractal-js/pre-js.js fractal-js/pre-js.js
 
+RUN cd fractal-js && \
+    ln -s ../fractal/src/fractal fractal.bc && \
+    emcc -o fractal.js fractal.bc -L/fractal/prefix/lib/ /fractal/prefix/lib/libz.so -lpng -ljpeg -lgd --pre-js pre-js.js -s FORCE_FILESYSTEM=1 -v -s EXPORTED_FUNCTIONS="['_main']" -O2 -s ALLOW_MEMORY_GROWTH=1 --closure 1
+
+ADD fractal-js fractal-js
 WORKDIR fractal-js
-RUN ln -s ../fractal/src/fractal fractal.bc && \
-    emcc -o fractal.js fractal.bc -L/fractal/prefix/lib/ /fractal/prefix/lib/libz.so -lpng -ljpeg -lgd --pre-js pre-js.js -s FORCE_FILESYSTEM=1 -v -s EXPORTED_FUNCTIONS="['_main']" -O2  -s DISABLE_EXCEPTION_CATCHING=0 -s ALLOW_MEMORY_GROWTH=1 --closure 1 -g2
 
 EXPOSE 8080
 
