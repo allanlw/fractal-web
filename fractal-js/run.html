@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+<script>
+function encodeThenDecode(input, inargs, outargs, cb) {
+  var w1 = new Worker("fractal.js");
+
+  console.log("Firing Encode worker");
+  w1.postMessage({input: input, arguments: ['--encode', '-vo', '/output.bin'].concat(inargs).concat(["/input.bin"])});
+  w1.onmessage = function(response) {
+    var w2 = new Worker("fractal.js");
+    console.log("Firing Info Worker");
+    w2.postMessage({input: response.data, arguments: ["--info", "-v", "/input.bin"]});
+    w2.onmessage = function() {
+      var w3 = new Worker("fractal.js");
+      console.log("Firing Decode worker");
+      w3.postMessage({input: response.data, arguments: ["--decode", "-vo", "/output.bin"].concat(outargs).concat(["/input.bin"])});
+      w3.onmessage = function(response) {
+        console.log(response.data);
+        console.log("Done decoding");
+        cb(response.data);
+      }
+    }
+  }        
+}
+
+var LENNA = null;
+
+function showControls() {
+  var controls = document.getElementById("controls");
+  var loading = document.getElementById("loading");
+  var submit = document.getElementById("submit");
+
+  submit.onclick = function(ev) {
+
+    ev.preventDefault();
+
+    controls.style.display = "none";
+    loading.style.display = "block";
+
+    encodeThenDecode(LENNA,
+        document.getElementById("inargs").value.split(" "),
+        document.getElementById("outargs").value.split(" "),
+        function(result) {
+           var b = new Blob([result]);
+           document.getElementById("output").src = URL.createObjectURL(b);
+
+           controls.style.display = "block";
+           loading.style.display = "none";
+        });
+
+    return false;
+  }
+
+  var el = document.createEvent('Events');
+  el.initEvent("click", true, false);
+  submit.dispatchEvent(el);
+}
+
+function reqListener () {
+  LENNA = this.response;
+  showControls();
+}
+
+var oReq = new XMLHttpRequest();
+oReq.responseType = "arraybuffer";
+oReq.addEventListener("load", reqListener);
+oReq.open("GET", "Lenna.png");
+oReq.send();
+</script>
+
+<div id="loading">
+Loading...
+</div>
+
+<div id="controls" style="display:none">
+
+In Args: <input id="inargs" value="--split=high --cutoff=40"/><br/>
+Out Args: <input id="outargs" value=""/><br/>
+
+<input type="submit" id="submit"/>
+</div>
+
+<img id="output"/>
+
