@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-
+<head>
 <script>
-var loadingbar, loadingLabel;
+var loadingbar, loadingLabel, consoleOutput, consoleWrapper;
 
 function setLoading(t) {
   loadingLabel.textContent = t;
@@ -11,10 +11,27 @@ function setLoading(t) {
 
 var last_in_args = null, last_in_result = null;
 
+function writeConsole(t) {
+  consoleOutput.innerText += t + "\n";
+  consoleWrapper.scrollTop = consoleWrapper.scrollHeight;
+}
+
 function _do_call(input, args, cb) {
+  writeConsole("");
+  writeConsole("fractal " + args);
+  writeConsole("");
   var w = new Worker("fractal.js");
   w.postMessage({input: input, arguments: args});
-  w.onmessage = cb;
+  w.onmessage = function(response) {
+      if (typeof response.data === "number") {
+        loadingbar.value = response.data;
+        return;
+      } else if (typeof response.data === "string" && !response.data.startsWith("{")) {
+        writeConsole(response.data);
+        return;
+      }
+      cb(response);
+  };
 }
 
 function encode(input, args, cb) {
@@ -28,10 +45,6 @@ function encode(input, args, cb) {
   _do_call(input,
     ['--encode', '-vo', '/output.bin'].concat(args).concat(["/input.bin"]),
     function(response) {
-      if (typeof response.data === "number") {
-        loadingbar.value = response.data;
-        return;
-      }
       last_in_args = JSON.stringify(args);
       last_in_result = response.data;
       cb(response.data);
@@ -97,6 +110,8 @@ function getOutArgs() {
 function showControls() {
   loadingbar = document.getElementById("loading");
   loadingLabel = document.getElementById("loadingLabel");
+  consoleOutput = document.getElementById("output");
+  consoleWrapper = document.getElementById("output-wrapper");
   var loadingContainer = document.getElementById("loadingContainer");
   var controls = document.getElementById("controls");
   var submit = document.getElementById("submit");
@@ -128,7 +143,7 @@ function showControls() {
           getOutArgs(),
           function(result) {
              var b = new Blob([result]);
-             document.getElementById("output").src = URL.createObjectURL(b);
+             document.getElementById("ImgOutput").src = URL.createObjectURL(b);
 
              controls.style.display = "block";
              loadingContainer.style.display = "none";
@@ -155,11 +170,40 @@ oReq.open("GET", "Lenna.png");
 oReq.send();
 </script>
 
+<style>
+#output-wrapper {
+  position: absolute;
+  right: 0px;
+  width: 50%;
+  top: 0px;
+  bottom: 0px;
+  overflow: auto;
+}
+
+#controls {
+  padding: 1em;
+  width: 50%;
+  overflow-x: auto;
+}
+
+#loadingContainer, #ImgOutput {
+  padding: 1em;
+}
+
+body,html { margin: 0px; padding: 0px; }
+
+</style>
+</head>
+<body>
+<div id="output-wrapper">
+<pre id="output">
+</pre>
+</div>
+
 <div id="loadingContainer">
 <span id="loadingLabel">Loading</span>
 <progress max="100" id="loading">Loading...</progress>
 </div>
-
 <div id="controls" style="display:none">
 
 <h2>In Args:</h2>
@@ -225,5 +269,5 @@ File (default is lenna): <input type="file" id="upload"/><br/>
 <input type="submit" id="submit"/>
 </div>
 
-<img id="output"/>
-
+<img id="ImgOutput"/>
+</body>

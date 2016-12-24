@@ -57,8 +57,11 @@ RUN curl -SL https://github.com/libgd/libgd/releases/download/gd-2.2.3/libgd-2.2
 
 # Fractal
 
+ARG branch=master
+
 RUN git clone http://github.com/allanlw/fractal.git && \
     cd fractal && \
+    git checkout $branch && \
     autoreconf -i && \
     emconfigure bash -c "CPPFLAGS='-I/fractal/prefix/include' LDFLAGS='-L/fractal/prefix/lib' CFLAGS=-O3 ./configure --prefix=/fractal/prefix" && \
     emmake make -j $(nproc) && \

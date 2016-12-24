@@ -11,11 +11,11 @@ onmessage = function(e){
 var Module = {
   "logReadFiles": true,
   "print": function(text) {
-    console.log(text);
     var found = text.match(/unassigned \/ .* total. \(([0-9.]+)%\)/);
     if (found) {
       postMessage(100.0 - parseFloat(found[1]));
     }
+    postMessage(text);
   },
   "printErr": function(text) {
     console.error(text)
