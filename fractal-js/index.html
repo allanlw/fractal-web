@@ -192,6 +192,12 @@ oReq.send();
 
 body,html { margin: 0px; padding: 0px; }
 
+.help {
+  border-bottom: 1px dashed #aaa;
+  cursor: help;
+  text-decoration: none;
+}
+
 </style>
 </head>
 <body>
@@ -206,65 +212,68 @@ body,html { margin: 0px; padding: 0px; }
 </div>
 <div id="controls" style="display:none">
 
-<h2>In Args:</h2>
-<label for="error">Error Cutoff:</label>
-<input type="text" id="error" size=3 value="40" /><br/>
+This tool encodes and decodes an image into a fractal representation using a triangular subdivision.
 
-<label for="color">Color (3x slowdown):</label>
+<h2>Encoding Args:</h2>
+<label for="upload" class="help" title="Must be JPEG or PNG">File (default is lenna):</label>
+<input type="file" id="upload"/><br/>
+
+<label for="color" class="help" title="The Red, Green and Blue channels will be encoded separately">Color (3x slowdown):</label>
 <input type="checkbox" id="color" /><br/>
 
-<label for="split">Split Mode:</label>
-<select id="split">
-<option value="--split=high" selected>Split edges on high entropy</option>
-<option value="--split=low">Split edges on low entropy</option>
-<option value="--split=mid">Split edges in the middle</option>
-</select>
-<br/>
-
-<label for="metric">Distance Metric</label>
+<label for="metric" class="help" title="Distance metric to use when comparing values between two pieces">Distance Metric</label>
 <select id="metric">
 <option value="--metric=rms" selected>Root Mean Squared Distance</option>
 <option value="--metric=sup">Supernum Distance</option>
 </select>
 <br/>
 
-<label for="subdivide">Subdivision Mode:</label>
+<label for="error" class="help" title="When a piece cannot find a larger area within this distance, it will be subdivided, unless otherwise prevented">Error Cutoff:</label>
+<input type="text" id="error" size=3 value="40" /><br/>
+
+<label for="subdivide" class="help" title="When subdividing a piece, how to split a triangle into parts">Subdivision Mode:</label>
 <select id="subdivide">
-<option value="--subdivide=quad" selected>Subdivide into fourths, based on the split</options>
-<option value="--subdivide=centeroid"> Subdivide into thirds using the centeroid</option>
+<option value="--subdivide=quad" selected>Subdivide into fourths by choosing a split point on each edge.</options>
+<option value="--subdivide=centeroid">Subdivide into thirds using the centeroid</option>
 </select>
 <br/>
 
-<label for="edges">Edge Detection Mode:</label>
+<label for="split" class="help" title="When subdividing into four parts, how to chose the point on the edge to split at">Split Mode:</label>
+<select id="split">
+<option value="--split=high" selected>Split edges on high valued entropy</option>
+<option value="--split=low">Split edges on low valued entropy</option>
+<option value="--split=mid">Split edges exactly in the middle</option>
+</select>
+<br/>
+
+<label for="edges" class="help" title="When subdividing edges based on entropy, how to determine information density">Entropy/Edge Detection Mode:</label>
 <select id="edges">
-<option value="--edges=laplace" selected>Laplacian edge detection</option>
-<option value="--edges=sobel">Sobel edge detection</option>
+<option value="--edges=sobel" selected>Sobel edge detection</option>
+<option value="--edges=laplace">Laplacian edge detection</option>
 </select>
 <br/>
 
-<label for="in_sample">Sampling Mode:</label>
+<label for="in_sample" class="help" title="When comparing two triangles, how to sample to have the same number of points">Sampling Mode:</label>
 <select id="in_sample">
 <option value="--sample=sub" selected>Sub Sample (Low error)</option>
 <option value="--sample=super">Super Sample (High error)</option>
 <option value="--sample=both">Both Sub/Super Sample (extremely low error and slow)</option>
 </select>
 
-<h2>Out Args:</h2>
-<label for="iterations">Iterations:</label>
+<h2>Decoding Args:</h2>
+<label for="iterations" class="help" title="How many iterations to apply the decoding function, starting with white noise">Iterations:</label>
 <input type="text" id="iterations" size=3 value="20" /><br/>
 
-<label for="fixup">Fixup Errors:</label>
+<label for="fixup" class="help" title="Interpolate unset pixels. Probably never want to turn this off.">Fixup Errors:</label>
 <input type="checkbox" id="fixup" checked/><br/>
 
-<label for="out_sample">Sampling Mode:</label><br/>
+<label for="out_sample" class="help" title="When comparing two triangles, how to sample to have the same number of points">Sampling Mode:</label><br/>
 <select id="out_sample">
 <option value="--sample=sub" selected>Sub Sample (Low error)</option>
 <option value="--sample=super">Super Sample (High error)</option>
 <option value="--sample=both">Both Sub/Super Sample (extremely low error and slow)</option>
 </select>
 <br/>
-
-File (default is lenna): <input type="file" id="upload"/><br/>
 
 <input type="submit" id="submit"/>
 </div>
